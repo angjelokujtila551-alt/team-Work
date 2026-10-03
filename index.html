@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ang.Sensi — sensitivity generator</title>
+<meta name="description" content="Generate sensitivity settings for mobile shooter games, tuned to your playstyle and grip.">
+<meta name="theme-color" content="#05070f">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-32.png" sizes="32x32">
+<link rel="icon" href="icon-16.png" sizes="16x16">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="apple-touch-icon" sizes="120x120" href="icon-120.png">
+<link rel="apple-touch-icon" sizes="152x152" href="icon-152.png">
+<link rel="apple-touch-icon" sizes="167x167" href="icon-167.png">
+<link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Ang.Sensi">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#05070f;
+    --panel:#0d1830;
+    --panel-2:#122040;
+    --border:#1f3a66;
+    --amber:#1e7cff;
+    --amber-deep:#0d4bae;
+    --teal:#eef5ff;
+    --text:#eaf2ff;
+    --text-muted:#8ca3c4;
+    --font-display:'Chakra Petch', sans-serif;
+    --font-body:'IBM Plex Sans', sans-serif;
+    --font-mono:'IBM Plex Mono', monospace;
+  }
+  *{ box-sizing:border-box; }
+  html,body{
+    margin:0; padding:0; color:var(--text);
+    font-family:var(--font-body);
+  }
+  html{
+    background:var(--bg);
+    overflow-x:hidden;
+  }
+  body{
+    min-height:100vh;
+    display:flex; justify-content:center;
+    position:relative; overflow-x:hidden;
+    padding:calc(28px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(40px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left));
+    background:
+      radial-gradient(ellipse 480px 380px at 12% 8%, rgba(30,124,255,0.40), transparent 60%),
+      radial-gradient(ellipse 420px 420px at 92% 18%, rgba(238,245,255,0.20), transparent 60%),
+      radial-gradient(ellipse 520px 460px at 50% 100%, rgba(30,124,255,0.32), transparent 65%),
+      var(--bg);
+    background-repeat:no-repeat;
+  }
+  .app{ width:100%; max-width:430px; position:relative; z-index:1; }
+  .thunder-deco{
+    position:absolute; top:-40px; right:-40px; width:280px; height:420px;
+    opacity:0.16; pointer-events:none; z-index:0;
+  }
+
+  .brand{ display:flex; align-items:center; gap:14px; margin-bottom:28px; }
+  .mark{ width:44px; height:44px; flex:none; filter:drop-shadow(0 0 14px rgba(30,124,255,0.7)); }
+  .mark svg{ width:100%; height:100%; display:block; }
+  h1{
+    font-family:var(--font-display); font-weight:600; font-size:24px;
+    letter-spacing:0.02em; margin:0; color:var(--text);
+  }
+  .tagline{
+    font-family:var(--font-mono); font-size:12px; color:var(--text-muted);
+    margin:2px 0 0; letter-spacing:0.03em;
+  }
+
+  .panel{
+    background:rgba(12,28,58,0.42); border:1px solid rgba(255,255,255,0.09);
+    border-radius:16px; padding:18px 16px; margin-bottom:16px;
+    backdrop-filter:blur(20px) saturate(160%); -webkit-backdrop-filter:blur(20px) saturate(160%);
+    box-shadow:0 8px 32px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.07);
+  }
+  .field + .field{ margin-top:16px; }
+  .field-label{
+    display:block; font-family:var(--font-display); font-weight:500;
+    font-size:13px; letter-spacing:0.06em; color:var(--text-muted);
+    margin-bottom:8px;
+  }
+  .segmented{
+    display:flex; flex-wrap:wrap; gap:6px;
+  }
+  .seg-btn{
+    flex:1 1 auto; min-width:64px; appearance:none; cursor:pointer;
+    background:rgba(255,255,255,0.04); color:var(--text-muted); border:1px solid rgba(255,255,255,0.09);
+    border-radius:9px; font-family:var(--font-body); font-weight:500;
+    font-size:13px; padding:10px 4px;
+    backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+  }
+  .seg-btn.active{
+    background:linear-gradient(160deg, var(--amber), var(--amber-deep));
+    color:#f8eaea; border-color:rgba(255,255,255,0.25);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.35), 0 4px 16px rgba(30,124,255,0.5);
+  }
+  .seg-btn:focus-visible{ outline:2px solid var(--teal); outline-offset:-2px; }
+
+  .select-wrap{ position:relative; }
+  .select-wrap::after{
+    content:'▾'; position:absolute; right:14px; top:50%; transform:translateY(-50%);
+    color:var(--text-muted); font-size:12px; pointer-events:none;
+  }
+  .select-wrap select{
+    width:100%; appearance:none; -webkit-appearance:none; -moz-appearance:none;
+    background:rgba(255,255,255,0.04); color:var(--text); border:1px solid rgba(255,255,255,0.09);
+    border-radius:9px; padding:11px 32px 11px 12px;
+    font-family:var(--font-body); font-weight:500; font-size:13px;
+    backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+  }
+  .select-wrap select:focus-visible{ outline:2px solid var(--teal); outline-offset:2px; }
+
+  .generate-btn{
+    width:100%; appearance:none; border:1px solid rgba(255,255,255,0.25); cursor:pointer;
+    background:linear-gradient(160deg, var(--amber), var(--amber-deep)); color:#f8eaea;
+    font-family:var(--font-display); font-weight:600; font-size:15px;
+    letter-spacing:0.03em; padding:15px; margin-bottom:18px;
+    clip-path:polygon(14px 0,100% 0,100% calc(100% - 14px),calc(100% - 14px) 100%,0 100%,0 14px);
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.35), 0 8px 28px rgba(30,124,255,0.5);
+  }
+  .generate-btn:active{ background:var(--amber-deep); }
+  .generate-btn:focus-visible{ outline:2px solid var(--teal); outline-offset:2px; }
+  .generate-btn svg{ width:16px; height:16px; }
+
+  .readout{
+    background:rgba(12,28,58,0.42); border:1px solid rgba(255,255,255,0.09);
+    border-radius:16px; padding:6px 16px; margin-bottom:12px;
+    backdrop-filter:blur(20px) saturate(160%); -webkit-backdrop-filter:blur(20px) saturate(160%);
+    box-shadow:0 8px 32px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.07);
+  }
+  .row{
+    display:flex; align-items:center; gap:12px;
+    padding:12px 0; border-bottom:1px solid rgba(255,255,255,0.07);
+    cursor:pointer;
+  }
+  .row.copied{ background:rgba(65,200,240,0.08); }
+  .row:last-child{ border-bottom:none; }
+  .ramp{ display:flex; flex-direction:column-reverse; gap:2px; flex:none; }
+  .ramp i{ width:10px; height:3px; border-radius:1px; background:var(--border); display:block; }
+  .ramp i.on{ background:var(--teal); }
+  .row-label{ flex:1; font-size:13px; color:var(--text-muted); }
+  .row-value{
+    font-family:var(--font-mono); font-weight:600; font-size:18px; color:var(--text);
+    min-width:36px; text-align:right;
+  }
+
+  .extras{
+    display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:8px; margin-bottom:20px;
+  }
+  .extra-card{
+    background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.08);
+    border-radius:12px; padding:10px 8px; text-align:center; cursor:pointer;
+    backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+  }
+  .extra-card.copied{ background:rgba(65,200,240,0.12); }
+  .extra-label{ font-size:11px; color:var(--text-muted); margin:0 0 4px; line-height:1.3; }
+  .extra-value{
+    font-family:var(--font-mono); font-weight:600; font-size:18px; margin:0; color:var(--teal);
+  }
+
+  .ghost-btn{
+    width:100%; appearance:none; cursor:pointer;
+    background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1);
+    color:var(--text); font-family:var(--font-body); font-weight:500; font-size:14px;
+    padding:12px; border-radius:10px;
+    backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+  }
+  .ghost-btn:active{ background:rgba(255,255,255,0.09); }
+  .ghost-btn:focus-visible{ outline:2px solid var(--teal); outline-offset:2px; }
+  .copy-msg{
+    font-size:12px; color:var(--teal); text-align:center; min-height:16px; margin:8px 0 0;
+  }
+
+  .install-tip{
+    margin-top:20px; padding:12px 14px; border-radius:14px;
+    background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08);
+    backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+  }
+  .install-tip p{ font-size:12.5px; color:var(--text-muted); margin:0 0 8px; line-height:1.5; }
+  .install-tip summary{ list-style:none; }
+  .install-tip summary::-webkit-details-marker{ display:none; }
+  .install-tip summary::after{ content:'+'; float:right; color:var(--text-muted); }
+  .install-tip[open] summary::after{ content:'−'; }
+
+  .saved-row{
+    display:flex; align-items:center; gap:10px; padding:9px 12px;
+    background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08);
+    border-radius:9px; font-size:12.5px; cursor:pointer;
+  }
+  .saved-row span.tag{ color:var(--text-muted); flex:1; }
+  .saved-row span.nums{ font-family:var(--font-mono); color:var(--teal); }
+  .saved-row button{
+    appearance:none; background:transparent; border:none; color:var(--text-muted);
+    font-size:15px; line-height:1; padding:2px 4px; cursor:pointer;
+  }
+
+  .disclaimer{ margin-top:24px; }
+  .disclaimer p{ font-size:11.5px; color:var(--text-muted); line-height:1.6; text-align:center; }
+
+  @media (prefers-reduced-motion:no-preference){
+    .seg-btn, .generate-btn, .ghost-btn{ transition:background-color 120ms ease; }
+  }
+</style>
+</head>
+<body>
+<svg class="thunder-deco" viewBox="0 0 200 300" aria-hidden="true">
+  <path d="M 120 0 L 55 140 L 95 150 L 40 300 L 150 120 L 105 108 L 150 0 Z"
+    fill="#eef5ff" stroke="#1e7cff" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M 40 60 L 10 130 L 32 135 L 5 205"
+    fill="none" stroke="#1e7cff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity="0.7"/>
+</svg>
+<div class="app">
+
+  <header class="brand">
+    <div class="mark" aria-hidden="true">
+      <img src="icon-192.png" alt="" style="width:100%;height:100%;border-radius:50%;display:block;">
+    </div>
+    <div>
+      <h1>Ang.Sensi</h1>
+      <p class="tagline">sensitivity readout · strike with precision</p>
+    </div>
+  </header>
+
+  <section class="panel controls">
+    <div class="field">
+      <span class="field-label">Playstyle</span>
+      <div class="segmented" data-group="playstyle" role="group" aria-label="Playstyle">
+        <button type="button" class="seg-btn" data-value="rusher">Rusher</button>
+        <button type="button" class="seg-btn active" data-value="balanced">Balanced</button>
+        <button type="button" class="seg-btn" data-value="sniper">Sniper</button>
+        <button type="button" class="seg-btn" data-value="pro">Pro</button>
+        <button type="button" class="seg-btn" data-value="onetap">One-Tap</button>
+        <button type="button" class="seg-btn" data-value="clashsquad">Clash Squad</button>
+        <button type="button" class="seg-btn" data-value="brranked">BR Ranked</button>
+        <button type="button" class="seg-btn" data-value="glide">Glide</button>
+        <button type="button" class="seg-btn" data-value="glidenodpi">No DPI</button>
+      </div>
+    </div>
+    <div class="field">
+      <span class="field-label">Grip</span>
+      <div class="segmented" data-group="grip" role="group" aria-label="Grip">
+        <button type="button" class="seg-btn" data-value="2finger">2-finger</button>
+        <button type="button" class="seg-btn active" data-value="3claw">3-claw</button>
+        <button type="button" class="seg-btn" data-value="4claw">4-claw</button>
+      </div>
+    </div>
+    <div class="field">
+      <span class="field-label">Device</span>
+      <div class="select-wrap">
+        <select id="deviceSelect">
+          <option value="iphone">iPhone (all models)</option>
+          <option value="samsung">Samsung Galaxy</option>
+          <option value="pixel">Google Pixel</option>
+          <option value="oneplus">OnePlus</option>
+          <option value="xiaomi">Xiaomi / Redmi</option>
+          <option value="poco">Poco</option>
+          <option value="realme">Realme</option>
+          <option value="oppo">Oppo</option>
+          <option value="vivo">Vivo</option>
+          <option value="motorola">Motorola</option>
+          <option value="other">Other Android</option>
+        </select>
+      </div>
+    </div>
+  </section>
+
+  <button id="generateBtn" class="generate-btn">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+      <path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/>
+    </svg>
+    Generate settings
+  </button>
+
+  <p style="font-size:11px; color:var(--text-muted); text-align:center; margin:0 0 8px;">tap any value to copy just that number</p>
+  <section class="readout" id="readout" aria-live="polite"></section>
+  <div class="extras" id="extras"></div>
+
+  <button id="copyBtn" class="ghost-btn">Copy settings</button>
+  <p class="copy-msg" id="copyMsg" aria-live="polite"></p>
+
+  <div style="display:flex; gap:8px; margin-top:8px;">
+    <button id="saveBtn" class="ghost-btn" style="flex:1;">☆ Save this roll</button>
+    <button id="shareBtn" class="ghost-btn" style="flex:1;">Share</button>
+  </div>
+  <p class="copy-msg" id="saveMsg" aria-live="polite"></p>
+
+  <div id="savedSection" hidden style="margin-top:8px;">
+    <p style="font-size:12px; color:var(--text-muted); margin:0 0 8px;">Saved rolls</p>
+    <div id="savedList" style="display:flex; flex-direction:column; gap:6px;"></div>
+  </div>
+
+  <button id="openFFBtn" class="generate-btn" style="margin-top:14px; clip-path:none;">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M18 8L22 12L18 16"/><path d="M2 12H22"/>
+    </svg>
+    Open Free Fire
+  </button>
+  <p class="copy-msg" id="openFFMsg" aria-live="polite"></p>
+
+  <div class="install-tip" id="installTip" hidden>
+    <p id="installText"></p>
+    <button id="installBtn" class="ghost-btn" hidden>Install app</button>
+  </div>
+
+  <details class="install-tip" style="margin-top:12px; padding:0;">
+    <summary style="padding:12px 14px; cursor:pointer; font-size:13px; font-weight:500; color:var(--text);">How to apply these in Free Fire</summary>
+    <ol style="margin:0; padding:0 14px 14px 30px; font-size:12.5px; color:var(--text-muted); line-height:1.7;">
+      <li>Open Free Fire → tap the gear icon → <strong>Sensitivity</strong> tab.</li>
+      <li>Drag each slider (General, Red Dot, 2x, 4x, Sniper, Free Look) until the number matches what's shown here.</li>
+      <li>DPI and Button Size are further down the same settings screen.</li>
+      <li>Save, then jump into a custom room to feel it out before you queue ranked.</li>
+      <li><strong>OB55 note:</strong> the new M7, RPK, and Hawk use an active recoil model — you drag to counter it instead of relying on spread. Try the Pro or Glide preset with these for smoother manual control.</li>
+    </ol>
+  </details>
+
+  <div class="install-tip" style="margin-top:12px; text-align:center;">
+    <p style="margin:0 0 10px;">Scan to open Ang.Sensi</p>
+    <img id="qrImg" alt="QR code linking to this app" width="140" height="140" style="border-radius:10px; background:#fff; padding:8px; display:block; margin:0 auto;">
+  </div>
+
+  <footer class="disclaimer">
+    <p>Fan-made tool, not affiliated with or endorsed by Garena or Free Fire. Sensitivity is personal — treat this as a starting point, then fine-tune in game.</p>
+    <p style="margin-top:8px;"><a href="#" id="communityLink" style="color:var(--amber); text-decoration:none; font-weight:500;">Join the community on Discord →</a></p>
+  </footer>
+</div>
+
+<script>
+  var ranges = {
+    rusher:     { general:[140,188], redDot:[145,189], scope2x:[120,183], scope4x:[90,150],  sniperScope:[5,40],   freeLook:[140,188], dpi:[400,750], buttonSize:[25,49] },
+    balanced:   { general:[100,165], redDot:[100,165], scope2x:[100,165], scope4x:[90,152],  sniperScope:[30,90],  freeLook:[110,170], dpi:[350,580], buttonSize:[15,39] },
+    sniper:     { general:[70,138],  redDot:[70,138],  scope2x:[90,157],  scope4x:[100,172], sniperScope:[50,120], freeLook:[95,165],  dpi:[300,480], buttonSize:[8,28]  },
+    pro:        { general:[150,186], redDot:[150,187], scope2x:[140,186], scope4x:[120,166], sniperScope:[70,125], freeLook:[150,186], dpi:[380,640], buttonSize:[20,38] },
+    onetap:     { general:[140,184], redDot:[145,186], scope2x:[130,182], scope4x:[105,160], sniperScope:[45,108], freeLook:[140,184], dpi:[400,670], buttonSize:[22,41] },
+    clashsquad: { general:[145,188], redDot:[145,188], scope2x:[125,180], scope4x:[95,156],  sniperScope:[30,90],  freeLook:[145,188], dpi:[420,690], buttonSize:[24,46] },
+    brranked:   { general:[130,180], redDot:[135,182], scope2x:[140,183], scope4x:[130,172], sniperScope:[40,95],  freeLook:[140,185], dpi:[380,620], buttonSize:[20,36] },
+    glide:      { general:[95,130],  redDot:[95,130],  scope2x:[100,135], scope4x:[95,130],  sniperScope:[40,70],  freeLook:[100,140], dpi:[320,480], buttonSize:[22,34] },
+    glidenodpi: { general:[95,130],  redDot:[95,130],  scope2x:[100,135], scope4x:[95,130],  sniperScope:[40,70],  freeLook:[100,140], dpi:[320,480], buttonSize:[22,34] }
+  };
+  var noDpiPresets = { glidenodpi:true };
+  var gripBoost = { '2finger':0, '3claw':4, '4claw':8 };
+  var iphoneDpi = {
+    rusher:[50,115], balanced:[35,95], sniper:[25,75], pro:[45,105],
+    onetap:[40,104], clashsquad:[45,112], brranked:[40,95], glide:[30,65], glidenodpi:[30,65]
+  };
+  var deviceBoost = {
+    iphone:5, samsung:4, pixel:4, oneplus:3, xiaomi:2, poco:2,
+    realme:1, oppo:1, vivo:1, motorola:0, other:0
+  };
+  var state = { playstyle:'balanced', grip:'3claw', device:'iphone' };
+  var lastValues = null;
+
+  function randIn(min,max){ return Math.round(min + Math.random()*(max-min)); }
+  function clamp(v){ return Math.max(1, Math.min(200, v)); }
+  function clampButton(v){ return Math.max(1, Math.min(50, v)); }
+
+  function rampDots(level){
+    var out = '';
+    for (var i=1;i<=5;i++){ out += '<i class="' + (i<=level?'on':'') + '"></i>'; }
+    return out;
+  }
+
+  function generate(){
+    var r = ranges[state.playstyle];
+    var boost = gripBoost[state.grip] + deviceBoost[state.device];
+    var rows = [
+      { label:'General',       level:1, value: clamp(randIn(r.general[0], r.general[1]) + boost) },
+      { label:'Red dot / 1x',  level:2, value: clamp(randIn(r.redDot[0], r.redDot[1]) + boost) },
+      { label:'2x scope',      level:3, value: clamp(randIn(r.scope2x[0], r.scope2x[1]) + boost) },
+      { label:'4x scope',      level:4, value: clamp(randIn(r.scope4x[0], r.scope4x[1]) + boost) },
+      { label:'Sniper scope',  level:5, value: clamp(randIn(r.sniperScope[0], r.sniperScope[1])) }
+    ];
+    var freeLook = clamp(randIn(r.freeLook[0], r.freeLook[1]) + boost);
+    var showDpi = !noDpiPresets[state.playstyle];
+    var dpi = null;
+    if (showDpi){
+      if (state.device === 'iphone'){
+        var idr = iphoneDpi[state.playstyle];
+        dpi = Math.max(0, Math.min(120, Math.round(randIn(idr[0], idr[1]) / 5) * 5));
+      } else {
+        dpi = Math.round(randIn(r.dpi[0], r.dpi[1]) / 50) * 50;
+      }
+    }
+    var buttonSize = clampButton(randIn(r.buttonSize[0], r.buttonSize[1]));
+
+    var readout = document.getElementById('readout');
+    readout.innerHTML = rows.map(function(row){
+      return '<div class="row" data-copy="' + row.value + '"><div class="ramp">' + rampDots(row.level) + '</div>' +
+             '<div class="row-label">' + row.label + '</div>' +
+             '<div class="row-value">' + row.value + '</div></div>';
+    }).join('');
+
+    var extras = document.getElementById('extras');
+    extras.style.gridTemplateColumns = showDpi ? 'repeat(3, minmax(0,1fr))' : 'repeat(2, minmax(0,1fr))';
+    extras.innerHTML =
+      '<div class="extra-card" data-copy="' + freeLook + '"><p class="extra-label">Free look</p><p class="extra-value">' + freeLook + '</p></div>' +
+      (showDpi ? '<div class="extra-card" data-copy="' + dpi + '"><p class="extra-label">DPI</p><p class="extra-value">' + dpi + '</p></div>' : '') +
+      '<div class="extra-card" data-copy="' + buttonSize + '"><p class="extra-label">Button size</p><p class="extra-value">' + buttonSize + '</p></div>';
+
+    lastValues = rows.reduce(function(acc,row){ acc[row.label]=row.value; return acc; }, {});
+    lastValues['Free look'] = freeLook;
+    if (showDpi) lastValues['DPI'] = dpi;
+    lastValues['Button size'] = buttonSize;
+    document.getElementById('copyMsg').textContent = '';
+  }
+
+  document.querySelectorAll('.segmented').forEach(function(group){
+    group.addEventListener('click', function(e){
+      var btn = e.target.closest('.seg-btn');
+      if (!btn) return;
+      group.querySelectorAll('.seg-btn').forEach(function(b){ b.classList.remove('active'); });
+      btn.classList.add('active');
+      state[group.dataset.group] = btn.dataset.value;
+      generate();
+    });
+  });
+
+  document.getElementById('deviceSelect').addEventListener('change', function(e){
+    state.device = e.target.value;
+    generate();
+  });
+
+  document.getElementById('generateBtn').addEventListener('click', generate);
+
+  function copyText(text, onOk, onFail){
+    if (navigator.clipboard && window.isSecureContext){
+      navigator.clipboard.writeText(text).then(onOk, onFail || onOk);
+    } else {
+      try{
+        var ta = document.createElement('textarea');
+        ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+        document.body.appendChild(ta); ta.focus(); ta.select();
+        document.execCommand('copy'); document.body.removeChild(ta);
+        onOk();
+      } catch(e){ if (onFail) onFail(); }
+    }
+  }
+
+  document.getElementById('copyBtn').addEventListener('click', function(){
+    if (!lastValues) return;
+    var text = 'Ang.Sensi settings (' + state.playstyle + ', ' + state.grip + ')\n' +
+      Object.keys(lastValues).map(function(k){ return k + ': ' + lastValues[k]; }).join('\n');
+    var msg = document.getElementById('copyMsg');
+    copyText(text, function(){ msg.textContent = 'Copied to clipboard'; },
+      function(){ msg.textContent = 'Could not copy — select and copy manually'; });
+  });
+
+  function wireTapToCopy(containerId, itemSelector){
+    document.getElementById(containerId).addEventListener('click', function(e){
+      var item = e.target.closest(itemSelector);
+      if (!item || !item.dataset.copy) return;
+      copyText(item.dataset.copy, function(){
+        item.classList.add('copied');
+        setTimeout(function(){ item.classList.remove('copied'); }, 700);
+      });
+    });
+  }
+  wireTapToCopy('readout', '.row');
+  wireTapToCopy('extras', '.extra-card');
+
+  document.getElementById('openFFBtn').addEventListener('click', function(){
+    var ua = navigator.userAgent || '';
+    var onIOS = /iPad|iPhone|iPod/.test(ua);
+    var playStoreUrl = 'https://play.google.com/store/apps/details?id=com.dts.freefiremax';
+    var appStoreUrl = 'https://apps.apple.com/us/app/free-fire-max/id1480516829';
+    var msg = document.getElementById('openFFMsg');
+    if (onIOS){
+      msg.textContent = 'Opening Free Fire MAX on the App Store…';
+      window.location.href = appStoreUrl;
+    } else {
+      msg.textContent = 'Launching Free Fire MAX…';
+      var intentUrl = 'intent://launch#Intent;action=android.intent.action.MAIN;' +
+        'category=android.intent.category.LAUNCHER;package=com.dts.freefiremax;' +
+        'S.browser_fallback_url=' + encodeURIComponent(playStoreUrl) + ';end';
+      window.location.href = intentUrl;
+    }
+  });
+
+  // ---- Save favorite rolls (device-local; nothing leaves this phone) ----
+  var SAVE_KEY = 'ang-sensi-saved-rolls';
+  function readSaved(){
+    try { return JSON.parse(localStorage.getItem(SAVE_KEY) || '[]'); }
+    catch(e){ return []; }
+  }
+  function writeSaved(list){
+    try { localStorage.setItem(SAVE_KEY, JSON.stringify(list)); } catch(e){}
+  }
+  function renderSaved(){
+    var list = readSaved();
+    var section = document.getElementById('savedSection');
+    var container = document.getElementById('savedList');
+    if (!list.length){ section.hidden = true; container.innerHTML = ''; return; }
+    section.hidden = false;
+    container.innerHTML = list.map(function(item, i){
+      return '<div class="saved-row" data-idx="' + i + '">' +
+        '<span class="tag">' + item.playstyle + ' · ' + item.grip + '</span>' +
+        '<span class="nums">' + item.general + ' / ' + item.redDot + '</span>' +
+        '<button type="button" class="del-saved" data-idx="' + i + '" aria-label="Delete">✕</button>' +
+      '</div>';
+    }).join('');
+  }
+  document.getElementById('saveBtn').addEventListener('click', function(){
+    if (!lastValues) return;
+    var list = readSaved();
+    list.unshift({
+      playstyle: state.playstyle, grip: state.grip, device: state.device,
+      general: lastValues['General'], redDot: lastValues['Red dot / 1x'],
+      values: lastValues, savedAt: Date.now()
+    });
+    if (list.length > 12) list = list.slice(0, 12);
+    writeSaved(list);
+    renderSaved();
+    var msg = document.getElementById('saveMsg');
+    msg.textContent = 'Saved';
+    setTimeout(function(){ msg.textContent = ''; }, 1500);
+  });
+  document.getElementById('savedList').addEventListener('click', function(e){
+    var delBtn = e.target.closest('.del-saved');
+    if (delBtn){
+      var list = readSaved();
+      list.splice(parseInt(delBtn.dataset.idx, 10), 1);
+      writeSaved(list);
+      renderSaved();
+      return;
+    }
+    var row = e.target.closest('.saved-row');
+    if (!row) return;
+    var item = readSaved()[parseInt(row.dataset.idx, 10)];
+    if (!item) return;
+    var text = 'Ang.Sensi settings (' + item.playstyle + ', ' + item.grip + ')\n' +
+      Object.keys(item.values).map(function(k){ return k + ': ' + item.values[k]; }).join('\n');
+    copyText(text, function(){
+      var msg = document.getElementById('saveMsg');
+      msg.textContent = 'Copied that saved roll';
+      setTimeout(function(){ msg.textContent = ''; }, 1500);
+    });
+  });
+  renderSaved();
+
+  // ---- Share ----
+  document.getElementById('shareBtn').addEventListener('click', function(){
+    if (!lastValues) return;
+    var text = 'My Ang.Sensi settings 🎯 (' + state.playstyle + ', ' + state.grip + ')\n' +
+      Object.keys(lastValues).map(function(k){ return k + ': ' + lastValues[k]; }).join('\n') +
+      '\n\nGet your own: ' + window.location.href;
+    var msg = document.getElementById('saveMsg');
+    if (navigator.share){
+      navigator.share({ title: 'Ang.Sensi settings', text: text }).catch(function(){});
+    } else {
+      copyText(text, function(){
+        msg.textContent = 'Copied — paste it wherever you want to share';
+        setTimeout(function(){ msg.textContent = ''; }, 2000);
+      });
+    }
+  });
+
+  // ---- QR code to this page, so it's shareable at a glance ----
+  document.getElementById('qrImg').src =
+    'https://api.qrserver.com/v1/create-qr-code/?size=280x280&margin=0&data=' +
+    encodeURIComponent(window.location.href);
+
+  generate();
+
+  // Home-screen install guidance
+  var installTip = document.getElementById('installTip');
+  var installText = document.getElementById('installText');
+  var installBtn = document.getElementById('installBtn');
+  var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+
+  if (!isStandalone){
+    installTip.hidden = false;
+    if (isIOS){
+      installText.textContent = 'Add to your home screen: tap the share icon, then "Add to Home Screen".';
+    } else {
+      installText.textContent = 'Install Ang.Sensi to your home screen for the full app experience.';
+    }
+  }
+
+  window.addEventListener('beforeinstallprompt', function(e){
+    e.preventDefault();
+    installTip.hidden = false;
+    installText.textContent = 'Install Ang.Sensi to your home screen for the full app experience.';
+    installBtn.hidden = false;
+    installBtn.addEventListener('click', function(){
+      e.prompt();
+    }, { once:true });
+  });
+
+  if ('serviceWorker' in navigator && location.protocol !== 'file:'){
+    window.addEventListener('load', function(){
+      navigator.serviceWorker.register('sw.js').catch(function(){});
+    });
+  }
+</script>
+</body>
+</html>
